@@ -1,0 +1,10 @@
+# 凭据与密钥——永不入库
+.brain_credentials
+*.env
+.env*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
