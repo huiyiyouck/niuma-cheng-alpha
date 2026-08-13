@@ -6,7 +6,7 @@
 - 执行角色：PM（产品经理）
 - 是否进入迭代：否
 - 关联迭代：无
-- 当前状态：进行中（定位骨架已对齐 + 平台调研已完成，待 Owner 确认定稿）
+- 当前状态：升级为迭代（定位定稿经 Owner 确认，2026-08-13）
 
 ## 背景
 
@@ -85,11 +85,11 @@ Demo 调研背景见 `docs/research/README.md`（四大痛点：全局污染 / �
 - 待办：BRAIN 平台调研（方式 1：Owner 登录、PM 浏览调研，重点评分体系；方式 2：Owner 自配 `cnhkmcp` MCP 凭据后摸 API 能力边界）。凭据纪律：AI 不经手账号密码，凭据由 Owner 自行配置。
 
 ## 收尾归档
-- 收尾日期：
-- 最终状态：进行中
+- 收尾日期：2026-08-13
+- 最终状态：升级为迭代（v0.1）
 - 已更新当前角色日志：是（`docs/progress/roles/pm.md`）
 - 其他角色待补充/确认：无
 - 已更新 `docs/progress/INDEX.md`：是
-- 已更新知识库：暂无
-- 关联 commit：
-- 下一次启动建议：BRAIN 平台调研 → 补全 Brief 评分体系事实 → 定稿 → v0.1 PRD
+- 已更新知识库：暂无（平台事实沉淀在 `docs/research/brain-platform-facts.md`）
+- 关联 commit：02a247d（定位骨架）、557f671（平台调研）
+- 下一次启动建议：v0.1 标准迭代已由 PM 启动，见 `docs/progress/iterations/v0.1.md`

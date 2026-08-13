@@ -13,6 +13,17 @@
 - 下一步入口：Owner 确认 Brief 定稿 → 升级 v0.1 标准迭代（PM 创建 PRD + 填写 project-context.md）。
 - 收尾状态：未收尾
 
+## 2026-08-13（续）— v0.1 迭代启动
+- 本次角色：PM（产品经理）
+- 动作：产出（Brief 归档升级 + v0.1 迭代启动 + PRD R1 初稿 + project-context 填写）
+- 涉及文档：`iterations/v0.1.md`（新建）、`iterations/v0.1-prd.md`（新建 R1）、`docs/baseline/project-context.md`（首次填写，技术栈留待定）、`ad-hoc/2026-08-10-product-brief-alpha-platform.md`（归档：升级为迭代）、`INDEX.md`
+- 结论：v0.1 目标定为漏斗右半段最短闭环（库存同步 → 规则分流 → 提交前检查 → 人工确认提交）；组装/改造 AI、Web 面、常驻调度均划出（路线 v0.2/v0.3）。
+- 关键取舍：先右半段后组装——库存已有 1 万+ 已回测 Alpha，右半段对「提交数」见效最快，且库存库 + 分流引擎是改造/组装的共同地基；提交设人工确认闸（不可逆动作）。
+- 关联迭代：v0.1
+- 遗留问题/风险：PRD 范围待 Owner 确认后送审；count=10000 封顶、检查限流两项开放问题交设计阶段。
+- 下一步入口：Owner 过 PRD 范围 → 另开会话切 Architect / Developer 做 R1 Review。
+- 收尾状态：未收尾
+
 ## 2026-08-10 — 会话摘要
 - 本次角色：PM（产品经理）
 - 动作：产出（Bootstrap 初始化 + 产品定位讨论 + Product Brief 草稿）

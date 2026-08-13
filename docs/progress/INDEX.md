@@ -4,11 +4,11 @@
 
 ## 当前项目状态
 
-- 当前迭代：无
-- 当前模式：非迭代（Product Brief）
-- 当前阶段：产品定位 Brief 进行中——定位骨架已与 Owner 对齐，待 BRAIN 平台调研（评分体系）后定稿
-- 阻塞项：BRAIN 平台调研需 Owner 提供入口（Owner 自行登录供浏览，或自配 MCP 凭据）
-- 下一步入口：PM 继续——完成平台调研 → 定稿 Brief → 建议升级 v0.1 标准迭代（创建 PRD）
+- 当前迭代：v0.1
+- 当前模式：标准迭代
+- 当前阶段：PRD 阶段 — R1 初稿完成，待 Owner 过范围后送 Architect + Developer Review（另开会话冷启动）
+- 阻塞项：无
+- 下一步入口：Owner 确认 PRD 范围 → 切 Architect / Developer 会话做 PRD Review → 全通过后 PRD 定稿进设计阶段
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
@@ -21,6 +21,7 @@
 
 | 版本 | 迭代记录 | PRD | 设计文档 | Summary | 状态 |
 |------|----------|-----|----------|---------|------|
+| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | — | — | 进行中（PRD 阶段） |
 
 ## 当前 Change Notes
 
@@ -31,7 +32,7 @@
 
 | 日期 | 模式 | 记录 | 状态 | 下一步 |
 |------|------|------|------|--------|
-| 2026-08-10 | Product Brief | `ad-hoc/2026-08-10-product-brief-alpha-platform.md` | 进行中 | BRAIN 平台调研 → 定稿 → 升级 v0.1 迭代 |
+| 2026-08-10 | Product Brief | `ad-hoc/2026-08-10-product-brief-alpha-platform.md` | 升级为迭代 | 已升级为 v0.1，后续见迭代记录 |
 
 ## 最近收尾摘要
 
@@ -54,6 +55,7 @@
 
 | 优先级 | 待办 | 归属角色 | 来源 | 状态 |
 |--------|------|----------|------|------|
+| P1 | 项目定位已定稿（草案→定稿），按 `cross-project-collaboration.md` 在 coordination STATUS.md 元信息变更台账登记一行 | PM | Product Brief 定稿（2026-08-13） | 未启动 |
 
 ## Bootstrap 记录
 - 时间：2026-08-10
