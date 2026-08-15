@@ -6,9 +6,9 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：PRD 阶段 — R1 Review中；Developer 已反馈「需修改」（2026-08-15：D1 高、D2/D3 中、D4 低 + Q1-Q4 待澄清）；Architect 已反馈「不通过」（2026-08-15：A1 阻塞、A2-A5 高、A6-A8 中）；DevOps 已反馈「通过（附条件）」（Owner 于 2026-08-15 追加为 R1 Review 方；H1 高、M1-M4 中、L1 低，不设部署阻塞）
-- 阻塞项：Architect A1 —— 验收 #6「获取 PENDING 类检查最终结果」缺已验证的平台 API 路径，须先做前置 spike 探明或改「预判」口径，否则不能进设计阶段（D1「三分类判定规则未定义」须 PM 在 R2 补入正文，属本迭代必修）
-- 下一步入口：PM 会话按 Developer + Architect R1 意见修订出 R2（Developer Q1-Q4 答案、Architect A1-A8 处置须回填正文）；A1 若选 spike 方案，由 Architect 另起非迭代预研先行 → 各指定 Review 方全通过后回 PM 会话定稿进设计阶段
+- 当前阶段：PRD 阶段 — R2 Review中；PM 已修订（2026-08-15）：A1 按方案 B 处置（#6 改「提交前预判」口径，不做 spike）、新增 §3 状态机与分流规则、验收改写为 #1-#10、R1 全部意见处置见 PRD「R1→R2 修订对照」；等待 Architect 与 Developer R2 复核（另开会话冷启动）
+- 阻塞项：无（A1 已按方案 B 处置，待 Architect R2 复核确认；M1 CI 拍板不阻塞 PRD Review，见跨任务待办）
+- 下一步入口：新开会话切 Architect / Developer 分别复核 `iterations/v0.1-prd.md` R2（重点：§3 新增章节 + 验收 #1-#10 + 修订对照）→ 全通过后回 PM 会话定稿进设计阶段；Owner 另需拍板 M1（CI 门禁二选一）
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
