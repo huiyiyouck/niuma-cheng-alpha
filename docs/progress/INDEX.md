@@ -6,9 +6,10 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：设计阶段 — 已进入（Owner 确认于 2026-08-15，降级留痕见迭代记录阶段执行记录），待 Architect 会话启动产出设计文档
+- 当前阶段：设计阶段 — R1 送审（2026-08-15）；Architect 已产出 `iterations/v0.1-design.md` + ADR-0001~0004，等待 Developer 与 DevOps 反馈（须另开会话冷启动）
 - 阻塞项：无
-- 下一步入口：新开会话切 Architect 产出 `iterations/v0.1-design.md`。**Architect 设计前必读三份输入**：① PRD（含「R2 附条件处置记录」与 Architect R2 Review §四承接清单）② `docs/research/demo-code-deep-dive.md`（Demo 全代码深读：批量仿真断点/退避机制原型、本地自相关快算路径、认证自愈、Demo 弱点清单——§9 按版本列了启示）③ `docs/research/brain-platform-facts.md`（平台 API 实测事实）
+- 下一步入口：新开会话切 Developer / DevOps 分别 Review `iterations/v0.1-design.md`（Developer 重点：§2 数据模型、§3 接口契约可实现性、§8 交接清单；DevOps 重点：§1.4 运行产物目录 N2、§2.3 断点生命周期 N3、§8 一键验证入口 N4、§3.1.1 认证自愈与凭据纪律）→ 两方全通过后回 Architect 会话定稿进实现阶段（降级模式：定稿推进需 Owner 确认 + 留痕）
+- 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏 100 秒/条，预判耗时随候选规模线性放大（500 条最坏 14~28 小时）。设计侧已用两阶段短路减半 + 分批 + 断点续跑 + `--limit` 分次，但下限由平台速度决定。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
@@ -21,7 +22,7 @@
 
 | 版本 | 迭代记录 | PRD | 设计文档 | Summary | 状态 |
 |------|----------|-----|----------|---------|------|
-| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | — | — | 进行中（PRD 阶段） |
+| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md` | — | 进行中（设计阶段 R1 Review中） |
 
 ## 当前 Change Notes
 
