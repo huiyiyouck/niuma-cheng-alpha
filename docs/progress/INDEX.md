@@ -6,7 +6,7 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：PRD 阶段 — R1 Review中；Developer 已反馈「需修改」（2026-08-15：D1 高、D2/D3 中、D4 低 + Q1-Q4 待澄清）；Architect 已反馈「不通过」（2026-08-15：A1 阻塞、A2-A5 高、A6-A8 中）
+- 当前阶段：PRD 阶段 — R1 Review中；Developer 已反馈「需修改」（2026-08-15：D1 高、D2/D3 中、D4 低 + Q1-Q4 待澄清）；Architect 已反馈「不通过」（2026-08-15：A1 阻塞、A2-A5 高、A6-A8 中）；DevOps 已反馈「通过（附条件）」（Owner 于 2026-08-15 追加为 R1 Review 方；H1 高、M1-M4 中、L1 低，不设部署阻塞）
 - 阻塞项：Architect A1 —— 验收 #6「获取 PENDING 类检查最终结果」缺已验证的平台 API 路径，须先做前置 spike 探明或改「预判」口径，否则不能进设计阶段（D1「三分类判定规则未定义」须 PM 在 R2 补入正文，属本迭代必修）
 - 下一步入口：PM 会话按 Developer + Architect R1 意见修订出 R2（Developer Q1-Q4 答案、Architect A1-A8 处置须回填正文）；A1 若选 spike 方案，由 Architect 另起非迭代预研先行 → 各指定 Review 方全通过后回 PM 会话定稿进设计阶段
 
@@ -56,6 +56,7 @@
 | 优先级 | 待办 | 归属角色 | 来源 | 状态 |
 |--------|------|----------|------|------|
 | P1 | 项目定位已定稿（草案→定稿），按 `cross-project-collaboration.md` 在 coordination STATUS.md 元信息变更台账登记一行 | PM | Product Brief 定稿（2026-08-13） | 未启动 |
+| P1 | CI 门禁缺失待 Owner 拍板：本迭代建最小 `l1-gates`（只跑单测+lint，不碰真实平台），还是明示接受 v0.1 全程降级模式（每阶段推进需 Owner 确认 + 降级留痕）。仓库现无 `.github/`，默认漂移成降级且无留痕即为流程缺陷 | DevOps | DevOps R1 Review M1（2026-08-15） | 待 Owner 决策 |
 
 ## Bootstrap 记录
 - 时间：2026-08-10
