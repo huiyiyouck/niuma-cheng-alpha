@@ -6,9 +6,9 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：PRD 阶段 — R1 初稿完成，待 Owner 过范围后送 Architect + Developer Review（另开会话冷启动）
+- 当前阶段：PRD 阶段 — R1 Review中，Owner 已确认范围（2026-08-15），等待 Architect 与 Developer 反馈（须另开会话冷启动）
 - 阻塞项：无
-- 下一步入口：Owner 确认 PRD 范围 → 切 Architect / Developer 会话做 PRD Review → 全通过后 PRD 定稿进设计阶段
+- 下一步入口：新开会话切 Architect / Developer 分别 Review `iterations/v0.1-prd.md` → 两方全通过后回 PM 会话定稿进设计阶段
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
