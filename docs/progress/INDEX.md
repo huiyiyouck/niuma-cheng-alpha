@@ -6,11 +6,11 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：设计阶段 — **R3 送审（2026-08-15）**；Architect 已修订 `iterations/v0.1-design.md`，两方 R2 共 8 项意见（Developer D16-D20、DevOps N11-N13，D19≡N11 合并）逐条验证后**全部采纳、无驳回**；修订对照见设计文档「R2 → R3 修订对照」；ADR-0004 同步补证据强度说明。**本轮另含 Owner 指示的 Demo 全量代码一手核验结论**（见非迭代工作表）。DevOps 已复核「需修改」（2026-08-15：R2 的 N11-N13 全部落实；新增 **N14 高**——独立核出、与 D21 同源，补三点定性：失效方向是危险失效而非保守失效（原缺陷会停下来要人工核对，现在会自动误判并再次 POST）、属「亮绿灯但数据错」第六条须进 §8 自测清单、`get_alpha` 直查让恢复路径判据绕开本地库与水位逻辑；N15 低——reconcile 遇平台查询失败的处置未定义，应「不确定就不动」）；Developer 已复核「需修改」（2026-08-15：R2 的 D16-D20 全部核销，D16 修法优于原建议——把判断整体移出 SQL 而非补 `ifnull()`；新增 **D21 高**——`submit --reconcile` 的收敛第一步用 `sync --incremental --stage OS` 取平台 `stage`，而增量按 `dateCreated` 只拉新增、永远拉不到已入库记录（§4.2 自身口径亦如此），收敛读到旧值 `IS` 会把「已提交成功」误判为未提交并再次 POST——正是 N8/D19 要防的二次不可逆动作；且 `BrainClient` 无按 `alpha_id` 查单条的方法，该命令在当前契约下无法实现。修法明确：补 `get_alpha(alpha_id)`（`GET /alphas/{id}`，Demo 已验证）逐条直查。另 D22/D23 低、Q7 待澄清）
-- 阻塞项：无（D21≡N14 为高严重度、非阻塞级，须 Architect 定稿前修入正文）
-- **待 Owner 裁决（流程）**：设计 R3 两方均「需修改」，按 `standard-iteration-quick.md` §9-10「R3 仍未通过升级`阻塞`交用户决策，不进 R4」已触发。两方判断一致——缺陷单点、修法明确、无设计决策空间，均表态可快速复核放行。建议 Owner 裁决走「Architect 修入正文 → 两方快速确认 → 定稿」并在异常升级记录留痕，无需按阻塞流程重启设计阶段。是否进 R4 由 Owner 决定，Review 方不自行放行
+- 当前阶段：设计阶段 — **R4 送审（2026-08-15）**；Owner 裁决走快速通道后，Architect 已定向修订 `iterations/v0.1-design.md`：R3 两方 6 项意见（Developer D21-D23 + Q7、DevOps N14-N15，N14≡D21）逐条验证后**全部采纳、无驳回**。核心修法——D21≡N14：`submit --reconcile` 原用 `sync --incremental` 取平台 `stage`，而增量按 `dateCreated` 只拉新增、拉不到已入库记录（§4.2 自身口径亦如此），会把「已提交成功」误判为未提交并再次 POST（失效方向由 fail-safe 退化为 fail-dangerous）；R4 给 `BrainClient` 补 `get_alpha(alpha_id)`（`GET /alphas/{id}`，Demo 与平台事实双重确认），`--reconcile` 改逐条直查、删掉增量同步那一步。其余：N15 查询失败保持 `in_flight` 不动、§8 第 6 条扩为六条并附针对性用例、D22 §4.4 数字同步 80 秒、D23 `--reset` 守卫收窄、Q7 `is_pending_flag` 归预判侧。**未改动 R3 意见范围之外的内容**。修订对照见设计文档「R3 → R4 修订对照」。等待两方快速复核（须另开会话冷启动）
+- 阻塞项：无（D21≡N14 已在 R4 修入正文）
+- **Owner 已裁决（流程，2026-08-15）**：设计 R3 两方均「需修改」触发 §9-10 的「升级阻塞交用户决策」，Owner 裁决**走快速通道**——Architect 修入正文出 R4 → 两方快速确认（只核 R3 意见落点，不重审全文）→ 定稿，不按阻塞流程重启设计阶段。留痕见 `v0.1.md` 异常升级记录第 2 行
 - 待 PM 确认：Change Note `CN-001`（`change-notes/CN-001-验收1主口径改为窗口级对账.md`，轻量变更）——PRD 验收 #1 字面主口径在本设计下既恒等无判别力、又因窗口重叠会误判红，改为窗口级对账；PRD 正文归 PM 维护，需 PM 确认后由 PM 落入正文。未确认不阻塞设计定稿（设计 §4.1 已写明实现会话的唯一依据）
-- 下一步入口：Architect 会话处置 D21（必修：改掉 `--reconcile` 的取数路径 + 给 `BrainClient` 补 `get_alpha`）+ D22/D23/Q7 → Developer 已声明：按建议修订并在 R4 说明中列出改动即可快速复核放行，不需重审全文；DevOps R3 复核仍待另开会话 → 两方通过后定稿进实现阶段（降级模式：定稿推进需 Owner 确认 + 留痕）
+- 下一步入口：新开会话切 Developer / DevOps **快速复核**设计 R4——按两方 R3 声明，只需核对 R3 意见的落点（§3.1 `get_alpha` 契约、§4.6 `--reconcile` 直查与 N15 处置、§4.4 `--reset` 守卫与数字、§4.3/§4.5 的 `is_pending_flag` 口径、§8 第 6 条第六项），**不需重审全文** → 两方通过后回 Architect 定稿进实现阶段（降级模式：定稿推进需 Owner 确认 + 留痕）
 - 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏约 80 秒/条（R3 按 Demo 一手核验订正，原记 100 秒），预判耗时随候选规模线性放大（500 条最坏 11~22 小时）。设计侧已用两阶段短路减半 + 分批 + 断点续跑 + `--limit` 分次，但下限由平台速度决定。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
@@ -24,7 +24,7 @@
 
 | 版本 | 迭代记录 | PRD | 设计文档 | Summary | 状态 |
 |------|----------|-----|----------|---------|------|
-| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md` | — | 进行中（设计阶段 R1 Review中） |
+| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md` | — | 进行中（设计阶段 R4 Review中） |
 
 ## 当前 Change Notes
 
@@ -37,7 +37,7 @@
 | 日期 | 模式 | 记录 | 状态 | 下一步 |
 |------|------|------|------|--------|
 | 2026-08-10 | Product Brief | `ad-hoc/2026-08-10-product-brief-alpha-platform.md` | 升级为迭代 | 已升级为 v0.1，后续见迭代记录 |
-| 2026-08-15 | Tech Spike | `ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md` | 已完成 | Architect 一手通读 Demo 快照 3401 行：查出 deep-dive §8 一处结论性错误（MCP 层**有**批量仿真）、相关性耗时数字订正（80s 非 100s）、`limit` 至少支持 500、两条新凭据泄露反面案例；结论待落入设计 R3；**PM 待订正** deep-dive §8 第 1 条（不阻塞任何在途流程，下次 PM 会话顺手改即可；`docs/research/README.md` 经核实未被改动、无需回退） |
+| 2026-08-15 | Tech Spike | `ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md` | 已完成 | Architect 一手通读 Demo 快照 3401 行：查出 deep-dive §8 一处结论性错误（MCP 层**有**批量仿真）、相关性耗时数字订正（80s 非 100s）、`limit` 至少支持 500、两条新凭据泄露反面案例；结论已于设计 R3 落入正文；**PM 待订正** deep-dive §8 第 1 条（不阻塞任何在途流程，下次 PM 会话顺手改即可；`docs/research/README.md` 经核实未被改动、无需回退） |
 
 ## 最近收尾摘要
 
