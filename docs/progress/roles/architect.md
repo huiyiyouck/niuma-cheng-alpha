@@ -81,3 +81,23 @@
   - R-1（预判耗时量级）维持提请知悉状态，本轮修订未改变其量级。
 - 下一步入口：Developer / DevOps 另开会话冷启动复核设计 R2 → 两方通过后回 Architect 定稿（降级模式需 Owner 确认 + 留痕）→ 进实现阶段。
 - 收尾状态：未收尾
+
+## 2026-08-15 — 会话摘要（Demo 全量代码一手核验 · Tech Spike）
+- 本次角色：Architect（架构师）
+- 动作：技术预研（非迭代）
+- 涉及文档：`ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md`（新建）、`docs/progress/INDEX.md`
+- 触发：Owner 质询设计的信息来源——我此前只直接读过 `platform_functions.py` 的 185 行（7%），其余 9 个文件 0 行，部署链路完全未研究；设计中的认证自愈、重试参数、ADR-0004 短路依据全部转述自 PM 的 `demo-code-deep-dive.md`。Owner 指示先调研再出 R3。
+- 结论：通读全部 10 个文件 3401 行。deep-dive 总体可靠，但查出**一处结论性错误**；另有一处数字订正、一处优化机会、两条新增反面案例。
+- 关键取舍（选了什么 / 备选什么 / 为什么）：
+  - **接受质询而非辩解**：我此前的引用标注基本诚实（该标 deep-dive 的标了 deep-dive），但设计 §7.3 写「已查证的证据面：`platform_functions.py` 全量 2600 行」时主语含糊，读起来像我通读过——这处措辞必须在 R3 订正。二手结论用于架构决策时，「谁查证的」和「结论是什么」同样重要。
+  - **反修正 deep-dive §8 第 1 条**：它称「MCP 层无批量仿真」，实际 `create_multi_simulation`（2293-2506 行）就在 39 个工具清单内。立项 README 的原表述是对的，被误改。我不改 PM 的产出正文，只在自己的 spike 记录里写明并列为 PM 待处置。
+  - **ADR-0004 的短路依据仍无法验证**：`brain-calculate-alpha-selfcorrQuick` 属 SOP 层、确认不在快照内。通读没能改变这一点——诚实的做法是在 ADR 风险节补一句「源文件不在本仓库快照内」，而不是让「已通读 Demo」这个事实给它背书。
+- 关联迭代：v0.1（设计阶段 R2 → R3 之间）
+- 关联非迭代工作：`ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md`
+- 关联 Change Note：无
+- 遗留问题/风险：
+  - 待落入设计 R3：R-1 耗时数字订正（80s 非 100s）、§4.1 分页 `limit` 可提到 500、§8 补第四条「不返回 Response 对象」、§7.3 措辞订正、ADR-0004 风险节补注。
+  - PM 待处置：deep-dive §8 第 1 条订正、立项 README 表述回退。
+  - B3（轮询 `"0" == 0` 类型 bug）拟入 `docs/knowledge/engineering/`，v0.2 做仿真调度时必须避免照抄。
+- 下一步入口：Architect 出设计 R3——处置 Developer D16-D20 + DevOps N11-N13，并把本次调研结论一并落入正文。
+- 收尾状态：已收尾
