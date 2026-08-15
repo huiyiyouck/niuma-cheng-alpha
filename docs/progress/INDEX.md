@@ -7,8 +7,8 @@
 - 当前迭代：v0.1
 - 当前模式：标准迭代
 - 当前阶段：PRD 阶段 — R2 Review中；PM 已修订（2026-08-15）：A1 按方案 B 处置（#6 改「提交前预判」口径，不做 spike）、新增 §3 状态机与分流规则、验收改写为 #1-#10、R1 全部意见处置见 PRD「R1→R2 修订对照」；等待 Architect 与 Developer R2 复核（另开会话冷启动）
-- 阻塞项：无（A1 已按方案 B 处置，待 Architect R2 复核确认；M1 CI 拍板不阻塞 PRD Review，见跨任务待办）
-- 下一步入口：新开会话切 Architect / Developer 分别复核 `iterations/v0.1-prd.md` R2（重点：§3 新增章节 + 验收 #1-#10 + 修订对照）→ 全通过后回 PM 会话定稿进设计阶段；Owner 另需拍板 M1（CI 门禁二选一）
+- 阻塞项：无（A1 已按方案 B 处置，待 Architect R2 复核确认；M1 已裁决：v0.1 全程降级模式，见迭代记录异常升级表）
+- 下一步入口：新开会话切 Architect / Developer 分别复核 `iterations/v0.1-prd.md` R2（重点：§3 新增章节 + 验收 #1-#10 + 修订对照）→ 全通过后回 PM 会话定稿进设计阶段（降级模式：定稿推进需 Owner 确认 + 留痕）
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
@@ -56,7 +56,6 @@
 | 优先级 | 待办 | 归属角色 | 来源 | 状态 |
 |--------|------|----------|------|------|
 | P1 | 项目定位已定稿（草案→定稿），按 `cross-project-collaboration.md` 在 coordination STATUS.md 元信息变更台账登记一行 | PM | Product Brief 定稿（2026-08-13） | 未启动 |
-| P1 | CI 门禁缺失待 Owner 拍板：本迭代建最小 `l1-gates`（只跑单测+lint，不碰真实平台），还是明示接受 v0.1 全程降级模式（每阶段推进需 Owner 确认 + 降级留痕）。仓库现无 `.github/`，默认漂移成降级且无留痕即为流程缺陷 | DevOps | DevOps R1 Review M1（2026-08-15） | 待 Owner 决策 |
 
 ## Bootstrap 记录
 - 时间：2026-08-10
