@@ -36,7 +36,7 @@
 | 日期 | 模式 | 记录 | 状态 | 下一步 |
 |------|------|------|------|--------|
 | 2026-08-10 | Product Brief | `ad-hoc/2026-08-10-product-brief-alpha-platform.md` | 升级为迭代 | 已升级为 v0.1，后续见迭代记录 |
-| 2026-08-15 | Tech Spike | `ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md` | 已完成 | Architect 一手通读 Demo 快照 3401 行：查出 deep-dive §8 一处结论性错误（MCP 层**有**批量仿真）、相关性耗时数字订正（80s 非 100s）、`limit` 至少支持 500、两条新凭据泄露反面案例；结论待落入设计 R3；**PM 待订正** deep-dive §8 第 1 条与立项 README 表述 |
+| 2026-08-15 | Tech Spike | `ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md` | 已完成 | Architect 一手通读 Demo 快照 3401 行：查出 deep-dive §8 一处结论性错误（MCP 层**有**批量仿真）、相关性耗时数字订正（80s 非 100s）、`limit` 至少支持 500、两条新凭据泄露反面案例；结论待落入设计 R3；**PM 待订正** deep-dive §8 第 1 条（不阻塞任何在途流程，下次 PM 会话顺手改即可；`docs/research/README.md` 经核实未被改动、无需回退） |
 
 ## 最近收尾摘要
 

@@ -55,7 +55,11 @@ Owner 指示：先完成调研，再出设计 R3。本记录是调研结果。
 
 `create_multi_simulation` 在 39 个 `@mcp.tool()` 清单内（我逐个数过，确为 39 个）。
 
-**结论：立项 README 的原表述「单次/批量仿真」是正确的，被 deep-dive 误改为错误结论。** 影响面：v0.3 组装核心会依赖批量仿真，若按 deep-dive 的结论行事，会误以为该能力需要从 pip 包 skill 移植，而它就在快照里。
+**结论：`docs/research/README.md:14` 的原表述「约 40 个 MCP 工具…单次/批量仿真」是正确的；deep-dive §8 声称「修正」了它，但该结论本身是错的。**
+
+**源文件状态已核实（2026-08-15）：`docs/research/README.md` 至今未被改动，仍是正确表述——deep-dive 只是在自己文档里写了修正意见，并未实际改动源文件。因此无需回退任何内容，唯一需订正的是 deep-dive §8 第 1 条自身。**（另：deep-dive §8 称其为「立项 README」，实际指 `docs/research/README.md`，非项目根 `README.md`；根 README 从未包含该表述。）
+
+影响面：v0.3 组装核心会依赖批量仿真，若按 deep-dive 的结论行事，会误以为该能力需要从 pip 包 skill 移植，而它就在快照里。deep-dive 是 INDEX 挂的设计阶段必读输入之一，冷启动会话会读到这条错误结论——污染面持续存在，但不产生即时阻塞（v0.1 范围不含仿真）。
 
 pip 包的 `brain-simAlphasinBatch-and-track` skill 与之**并存**、不矛盾——skill 提供的是更完整的批量调度（fingerprint 去重 / CSV 断点 / 并发退避 / detached 后台），MCP 层提供的是基础的多表达式提交与等待。两者是不同层次。
 
@@ -131,16 +135,17 @@ pip 包的 `brain-simAlphasinBatch-and-track` skill 与之**并存**、不矛盾
 
 **需由他人处置的事项**（我不改他人产出正文）：
 
-| 事项 | 归属 | 说明 |
-|------|------|------|
-| `demo-code-deep-dive.md` §8 第 1 条订正 | PM | 该文档是 PM 产出；建议改为「MCP 层**有**基础批量仿真（`create_multi_simulation`，2–8 表达式）；pip 包 skill 提供的是更完整的批量调度（fingerprint/CSV 断点/并发退避/detached），两者并存」 |
-| 立项 README 相关表述 | PM / Owner | 原表述「单次/批量仿真」正确，若已按 deep-dive 改动需回退 |
+| 事项 | 归属 | 紧急度 | 说明 |
+|------|------|--------|------|
+| `demo-code-deep-dive.md` §8 第 1 条订正 | PM | **不阻塞，下次 PM 会话顺手改** | 该文档是 PM 产出，我不改他人正文。建议改为「MCP 层**有**基础批量仿真（`create_multi_simulation`，2–8 表达式，在 39 工具清单内）；pip 包 skill 提供的是更完整的批量调度（fingerprint/CSV 断点/并发退避/detached），两者并存、不矛盾」。同时 §6 差异表「核心平台函数一致」的结论不受影响 |
+| ~~立项 README 表述回退~~ | — | **经核实无需处置** | `docs/research/README.md:14` 从未被改动，至今仍是正确表述；deep-dive 只是声称修正、未实际改动源文件。无需回退 |
+| PM 角色日志 `roles/pm.md` 含同一条错误结论 | PM | 不阻塞 | 角色日志是历史留痕，不追溯改写；建议 PM 在订正 deep-dive 时于新条目中更正，不改旧条目 |
 
 ## 收尾归档
 - 收尾日期：2026-08-15
 - 最终状态：已完成
 - 已更新当前角色日志：是
-- 其他角色待补充/确认：PM——deep-dive §8 第 1 条订正、立项 README 表述回退
+- 其他角色待补充/确认：PM——deep-dive §8 第 1 条订正（不阻塞任何在途流程；`docs/research/README.md` 经核实无需回退）
 - 已更新 `docs/progress/INDEX.md`：是
 - 已更新知识库：待设计 R3 一并处理（B3 轮询 bug 拟入 `docs/knowledge/engineering/`）
 - 关联 commit：见本次提交
