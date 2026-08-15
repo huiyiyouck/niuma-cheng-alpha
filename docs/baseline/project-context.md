@@ -15,8 +15,9 @@ Alpha 管理平台——Owner 自用的 WorldQuant BRAIN Alpha 研究自动化 +
 ## 架构与模块地图
 > 关键目录 / 模块 → 职责，让 Agent 不通读代码就知道改动该去哪。简单项目写「单一模块」。
 - 尚无业务代码（v0.1 实现阶段后回填）
-- `docs/research/AI打工人_demo/`：立项调研原始快照（只读参考，非本项目代码）
+- `docs/research/AI打工人_demo/`：立项调研原始快照（只读参考，非本项目代码；注意快照不完整——缺 forum_functions.py 与 skills 层，完整能力以 pip 包 `cnhkmcp` 为准）
 - `docs/research/brain-platform-facts.md`：BRAIN 平台 API 实测事实（评分体系 / 库存 / 参数空间）
+- `docs/research/demo-code-deep-dive.md`：Demo 全代码流程深读（五层架构 / API 调用面 / 批量与断点机制原型 / Demo 弱点清单 / 各版本启示）——设计与实现阶段必读
 
 ## 启动方式
 待定（v0.1 实现阶段后回填）。

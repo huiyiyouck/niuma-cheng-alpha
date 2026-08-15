@@ -8,7 +8,7 @@
 - 当前模式：标准迭代
 - 当前阶段：PRD 阶段 — **已定稿**（2026-08-15：R2 三方全通过，附条件 9 项（D5-D8 / A9-A13 / N1）已由 PM 定稿前补入正文，见 PRD「R2 附条件处置记录」；N2-N4 等结转设计阶段）；等待 Owner 确认进入设计阶段（降级模式）
 - 阻塞项：无
-- 下一步入口：Owner 确认进设计阶段 → 新开会话切 Architect 产出 `iterations/v0.1-design.md`（设计承接清单见 PRD「R2 附条件处置记录」末行 + Architect R2 Review §四）
+- 下一步入口：Owner 确认进设计阶段 → 新开会话切 Architect 产出 `iterations/v0.1-design.md`。**Architect 设计前必读三份输入**：① PRD（含「R2 附条件处置记录」与 Architect R2 Review §四承接清单）② `docs/research/demo-code-deep-dive.md`（Demo 全代码深读：批量仿真断点/退避机制原型、本地自相关快算路径、认证自愈、Demo 弱点清单——§9 按版本列了启示）③ `docs/research/brain-platform-facts.md`（平台 API 实测事实）
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
