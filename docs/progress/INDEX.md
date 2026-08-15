@@ -6,9 +6,9 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：PRD 阶段 — R1 Review中，Owner 已确认范围（2026-08-15），等待 Architect 与 Developer 反馈（须另开会话冷启动）
-- 阻塞项：无
-- 下一步入口：新开会话切 Architect / Developer 分别 Review `iterations/v0.1-prd.md` → 两方全通过后回 PM 会话定稿进设计阶段
+- 当前阶段：PRD 阶段 — R1 Review中；Developer 已反馈「需修改」（2026-08-15：D1 高、D2/D3 中、D4 低 + Q1-Q4 待澄清）；Architect 已反馈「不通过」（2026-08-15：A1 阻塞、A2-A5 高、A6-A8 中）
+- 阻塞项：Architect A1 —— 验收 #6「获取 PENDING 类检查最终结果」缺已验证的平台 API 路径，须先做前置 spike 探明或改「预判」口径，否则不能进设计阶段（D1「三分类判定规则未定义」须 PM 在 R2 补入正文，属本迭代必修）
+- 下一步入口：PM 会话按 Developer + Architect R1 意见修订出 R2（Developer Q1-Q4 答案、Architect A1-A8 处置须回填正文）；A1 若选 spike 方案，由 Architect 另起非迭代预研先行 → 各指定 Review 方全通过后回 PM 会话定稿进设计阶段
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
 > `设计阶段 — Review R2，Architect 等待 PM 和 Developer 反馈`
