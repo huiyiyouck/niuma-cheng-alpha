@@ -6,11 +6,11 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：**实现阶段 — 待启动**。设计阶段已于 2026-08-15 **定稿**（Owner 确认，降级模式留痕见 `v0.1.md` 阶段执行记录第 2 行）：R1–R4 四轮 Review，两方全通过，累计 31 条编号意见 / 29 个独立问题**全部采纳、无一驳回**；ADR-0001~0004 转「已采纳」
+- 当前阶段：**实现阶段 — R1 送审（2026-08-16）**。Developer 已按设计 §8 交接清单实现全部模块（db / client / config / credentials / classify / sync / precheck / report / submit / cli）并完成自测：`iterations/v0.1-test-report.md`，pytest **93 passed**、compileall 通过、验收 #1–#10 自动部分全绿（人工抽检 3 项留待 Owner 验收）；§8 第 6 条「六条亮绿灯但数据错」路径均有针对性用例。等待 Architect 与 DevOps Review（须另开会话冷启动）
 - 阻塞项：无
 - **Owner 已裁决（2026-08-16）：建最小 `l1-gates`**——DevOps 在 Developer 开工前建 GitHub Actions（只跑单测 + lint，不触真实平台）。建成后实现/部署阶段恢复正常门禁模式（绿灯自动推进），见 `v0.1.md` 异常升级记录第 2 行
 - CN-001 已由 PM 确认并执行（2026-08-16）：PRD 验收 #1 正文已改为窗口级对账口径，与设计 §4.1 步骤 4 一致——实现会话直接以 PRD 正文为准，不再存在两处口径
-- 下一步入口：~~先 DevOps 建最小 `l1-gates`~~ → **已建成**（2026-08-16，DevOps 会话）：`.github/workflows/l1-gates.yml`，Python 3.11 + `compileall` 语法检查（排除 `docs/research/` 第三方快照）+ pytest（退出码 5「无用例」视为通过，Developer 首个带测试的 commit 起自动成为实际门禁）；不配置任何平台凭据 secret；不设 `paths-ignore`（纯文档 commit 也须跑出绿灯结论，否则按 [P0]「查不到结论」等同非绿灯反而卡死流程）。**已 push 并首跑绿灯**（run `31927751637`，10 秒，`pytest` 退出码 5 被正确识别为「无用例」）。**降级模式到此结束**——实现阶段起，阶段推进依据回到 `runtime.md` [P0]「`l1-gates` 在当前 commit 的绿灯结论」，PRD / 设计两阶段的降级留痕保持有效、不追溯。→ **再**新开会话切 **Developer 启动实现阶段**。必读：`iterations/v0.1-design.md`（已定稿，§3 接口契约与 §8 交接清单是主要入口）+ `iterations/v0.1-prd.md`（验收 #1–#10）+ `ADR-0001~0004`。开工要点——① §8 第 1 条「先建骨架再填逻辑」：`db.py` schema → `client.py`（含替身注入点）→ 其余模块；② §8 第 6 条那**六条「亮绿灯但数据错」的路径**是本项目最有价值的实现期检查表，Developer 在 R4 建议自测报告按其逐条留证据；③ §8 第 3 条 `.gitignore` 追加 `data/` 须在首个产生运行产物的 commit 之前；④ 实现阶段 Review 方由 Developer 送审时指定（Architect 转 Review 方）
+- 下一步入口：新开会话切 **Architect / DevOps 分别 Review 实现 R1**。Architect 重点：实现与设计 §2/§3/§4 契约的一致性、**1 处待裁定的偏离**（§3.1.1 认证探活改为「首次认证 + 401 自愈」，理由与覆盖见自测报告「需 Review 方裁定的偏离」）、以及「验收标准 / 边界 / 回归」的独立复核；DevOps 重点：`data/` 三件套落位、凭据纪律的结构化断言、`make test` 与 `l1-gates` 的衔接 → 两方通过后由 Owner 验收（含 3 项人工抽检）→ 迭代关闭检查
 - 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏约 80 秒/条，预判耗时随候选规模线性放大（500 条最坏 11~22 小时）。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
@@ -24,7 +24,7 @@
 
 | 版本 | 迭代记录 | PRD | 设计文档 | Summary | 状态 |
 |------|----------|-----|----------|---------|------|
-| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md`（已定稿） | — | 进行中（实现阶段待启动） |
+| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md`（已定稿） | — | 进行中（实现阶段 R1 Review中；自测报告 `iterations/v0.1-test-report.md`） |
 
 ## 当前 Change Notes
 
