@@ -1,5 +1,17 @@
 # PM（产品经理）角色日志
 
+## 2026-08-16 — 会话摘要（CN-001 确认 + deep-dive 订正）
+- 本次角色：PM（产品经理）
+- 动作：确认 Change Note + 修改（PRD 正文、研究文档订正）
+- 涉及文档：`change-notes/CN-001`（确认+执行记录）、`iterations/v0.1-prd.md`（验收 #1 主口径改窗口级对账 + 新增「定稿后变更记录」表）、`docs/research/demo-code-deep-dive.md`（§3.2/§8 订正）、`iterations/v0.1.md`（CN 表）、`INDEX.md`
+- 结论：CN-001 确认通过（轻量级别成立：不改范围/流程/契约，只改 #1 通过条件；新口径左值来自平台独立报告，可证伪性严格更强）并已落 PRD 正文——实现会话不再面对两处口径。deep-dive 被 Architect 一手核验查出一处结论性错误（误称 MCP 层无批量仿真，实有 `create_multi_simulation`），已订正并撤回对立项 README 的错误「修正」。
+- 关键取舍：无。
+- 关联迭代：v0.1（实现阶段待启动）
+- 关联 Change Note：CN-001（已执行）
+- 遗留问题/风险：**教训**——研究文档里 `grep batch` 漏 `multi` 就下「无批量」的断言、「声称修正 README」却未核实原文是否有错，都是「检索结果 ≠ 全貌、转述 ≠ 事实」；后续研究性结论须标注核验方式。`l1-gates` 二次裁决归 Owner，不归 PM。
+- 下一步入口：Owner 裁决 l1-gates → Developer 启动实现。
+- 收尾状态：未收尾
+
 ## 2026-08-15 — 会话摘要（Demo 全代码深读）
 - 本次角色：PM（产品经理）
 - 动作：产出（Demo 全代码流程深读研究，Owner 指出 PM 未吃透 Demo 属失职后补课）

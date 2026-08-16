@@ -36,7 +36,9 @@ SOP 层   pip 包内 22 个 skills + 6 份示例工作流文档（★ 本地快�
 - **弱点**：认证成功后把明文凭据**回写**进 `user_config.json`（包内该文件即含 credentials.email/password 结构）；凭据随包分发目录明文存放。我们的 #9 凭据纪律正是针对这类做法的反面设计。
 
 ### 3.2 仿真流程（单次，阻塞）
-`create_simulation`：组 payload（REGULAR 剔除 SUPER 专属字段）→ POST `/simulations` → 从 **Location header** 拿 simulation URL → **while True 轮询**：读 `Retry-After` header，非 0 就 sleep 该秒数，为 0 即完成 → 从进度响应取 `alpha` id → GET `/alphas/{id}` 返回完整详情（含 is.checks）。**无批量、无并发原语（全文无 Semaphore/gather/ThreadPool）**；一次调用一个 Alpha，靠 MCP timeout=900 兜底。返回体附一句人味提示（负 Sharpe 可加负号翻转）。
+`create_simulation`：组 payload（REGULAR 剔除 SUPER 专属字段）→ POST `/simulations` → 从 **Location header** 拿 simulation URL → **while True 轮询**：读 `Retry-After` header，非 0 就 sleep 该秒数，为 0 即完成 → 从进度响应取 `alpha` id → GET `/alphas/{id}` 返回完整详情（含 is.checks）。单次调用一个 Alpha，靠 MCP timeout=900 兜底。返回体附一句人味提示（负 Sharpe 可加负号翻转）。
+
+**【2026-08-16 订正，Architect spike 核出】** MCP 层**有**基础批量仿真：`create_multi_simulation`（2294-2506 行，39 工具清单内）——把 2~8 条表达式打包成数组 POST `/simulations`（平台 multisimulation），逐个轮询子仿真。初版误写「无批量」，原因是我用 `grep batch` 检索而漏了 `multi` 一词。**无并发原语**（Semaphore/gather/ThreadPool）这一点仍成立——multi 是平台侧打包，不是客户端并发。
 
 ### 3.3 数据探索
 - `get_datasets` / `get_datafields`：GET `/data-sets`、`/data-fields`（按 instrumentType/region/delay/universe/dataset.id/search 过滤；datafields **硬编码 limit=50 offset=0**——不分页，只够探索不够穷尽）。
@@ -107,8 +109,8 @@ leaderboard（`/consultant/boards/leader`）、pyramid multipliers/alphas（带 
 
 ## 8. 对立项 README 的修正
 
-1. 原表述「platform_functions.py 封装约 40 个 MCP 工具：认证、单次/**批量**仿真…」——**不准确**：MCP 层无批量仿真，批量在 pip 包 skill `brain-simAlphasinBatch-and-track` 中实现（快照未含）。
-2. 原表述「研究流程靠人：仅一条钩子纪律 → 研究流程模板化全新做」——**已过时**：包 4.1.4 已有 22 个 skills 构成完整 SOP 层（探索/组装/批量/检查/改造/报告全链路），我们的「研究流程模板化」不是从零建，而是**评估-取舍-吸收**这套现成 SOP。
+1. **【2026-08-16 订正】原第 1 条撤回。** 初版称「README 写的『单次/批量仿真』不准确、MCP 层无批量」——**错**：MCP 层有 `create_multi_simulation`（2~8 表达式打包，见 §3.2 订正），`docs/research/README.md:14` 的表述**从未错过、无需回退**。正确的关系是：MCP 层提供基础批量（平台 multisimulation 打包），pip 包 skill `brain-simAlphasinBatch-and-track` 提供更完整的批量调度（fingerprint 去重 / CSV 断点 / 并发退避 / detached），两者并存不矛盾。此错由 Architect 一手核验（`docs/progress/ad-hoc/2026-08-15-spike-demo-code-firsthand-audit.md`）查出。
+2. 原表述「研究流程靠人：仅一条钩子纪律 → 研究流程模板化全新做」——**已过时**：包 4.1.4 已有 22 个 skills 构成完整 SOP 层（探索/组装/批量/检查/改造/报告全链路），我们的「研究流程模板化」不是从零建，而是**评估-取舍-吸收**这套现成 SOP。（此条经 Architect 复核成立。）
 
 ## 9. 对本产品各版本的直接启示
 
