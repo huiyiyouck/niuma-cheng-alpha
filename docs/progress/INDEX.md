@@ -7,10 +7,10 @@
 - 当前迭代：v0.1
 - 当前模式：标准迭代
 - 当前阶段：**实现阶段 — R2 送审（2026-08-16）**。两方 R1 Review 共 14 条意见（Architect A14–A24、DevOps O1–O3，O3≡A14）**全部采纳、无一驳回**，已逐条修入实现；另主动补一条 Review 方未提的设计 §5 遗漏（`sync` 长任务进度输出）。pytest **109 passed**（R1 的 93 项全部仍绿 + 新增 16 项）、`make lint` 退出 0、干净检出预演等价 CI 亦 109 passed。两处偏离经 Architect 裁定接受、设计不改，留痕见 `v0.1.md`「实现取舍留痕」。等待两方复核（须另开会话冷启动）
-- 阻塞项：**O1（流程门禁，待解除）**——三条实现 commit 尚未推送，`l1-gates` 从未在实现代码上运行过；按 `runtime.md` [P0] fail-closed，「查不到结论」等同非绿灯，实现阶段不得推进。`git push` 后确认 Actions 绿灯即解除（已预演，预计不会红）
+- 阻塞项：无。**O1 已解除（2026-08-16）**：实现代码已推送，`l1-gates` 在 `0b3e9b1` 取得绿灯（run 31945191601，日志确认实跑 109 passed，非骨架期跳过分支）——这是 CI 建成后第一次真实门禁应用，按预期放行。注意门禁结论**绑定 commit、不继承**，后续每轮修订需重新取绿
 - **Owner 已裁决（2026-08-16）：建最小 `l1-gates`**——DevOps 在 Developer 开工前建 GitHub Actions（只跑单测 + lint，不触真实平台）。建成后实现/部署阶段恢复正常门禁模式（绿灯自动推进），见 `v0.1.md` 异常升级记录第 2 行
 - CN-001 已由 PM 确认并执行（2026-08-16）：PRD 验收 #1 正文已改为窗口级对账口径，与设计 §4.1 步骤 4 一致——实现会话直接以 PRD 正文为准，不再存在两处口径
-- 下一步入口：① `git push` 取得 `l1-gates` 绿灯（解除 O1；注意门禁结论绑定 commit、不继承，R2 需重新取绿）→ ② 新开会话切 Architect / DevOps **复核实现 R2**（重点：A14 快照补齐与交叉印证、A15 `count` 缺失抛错、A16 分批、A17 全局对账、O2 `Makefile` 口径；CI 侧 lint 对齐由 DevOps 承接）→ ③ 两方通过 + Owner 人工抽检 3 项（#6 真实小批量、#7 报告可读性、#8 真实提交）→ ④ 迭代关闭检查
+- 下一步入口：新开会话切 Architect / DevOps **复核实现 R2**（重点：A14 快照补齐与库/快照交叉印证、A15 `count` 缺失抛错、A16 分批、A17 全局对账、O2 `Makefile` 口径；CI 侧 lint 排除规则对齐由 DevOps 承接）→ 两方通过 + Owner 人工抽检 3 项（#6 真实小批量、#7 报告可读性、#8 真实提交）→ 迭代关闭检查
 - 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏约 80 秒/条，预判耗时随候选规模线性放大（500 条最坏 11~22 小时）。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
@@ -24,7 +24,7 @@
 
 | 版本 | 迭代记录 | PRD | 设计文档 | Summary | 状态 |
 |------|----------|-----|----------|---------|------|
-| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md`（已定稿） | — | 进行中（实现阶段 R1 Review中；自测报告 `iterations/v0.1-test-report.md`） |
+| v0.1 | `iterations/v0.1.md` | `iterations/v0.1-prd.md` | `iterations/v0.1-design.md`（已定稿） | — | 进行中（实现阶段 R2 Review中；自测报告 `iterations/v0.1-test-report.md`） |
 
 ## 当前 Change Notes
 
