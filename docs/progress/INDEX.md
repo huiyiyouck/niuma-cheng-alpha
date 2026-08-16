@@ -6,11 +6,11 @@
 
 - 当前迭代：v0.1
 - 当前模式：标准迭代
-- 当前阶段：**实现阶段 — R1 送审（2026-08-16）**。Developer 已按设计 §8 交接清单实现全部模块（db / client / config / credentials / classify / sync / precheck / report / submit / cli）并完成自测：`iterations/v0.1-test-report.md`，pytest **93 passed**、compileall 通过、验收 #1–#10 自动部分全绿（人工抽检 3 项留待 Owner 验收）；§8 第 6 条「六条亮绿灯但数据错」路径均有针对性用例。等待 Architect 与 DevOps Review（须另开会话冷启动）
+- 当前阶段：**实现阶段 — R1 Review 中（2026-08-16）**。Developer 已实现全部模块并自测（93 passed，`v0.1-test-report.md`）。**Architect 已 Review：需修改**——A14 高（`submit --reconcile` 不补齐快照、`snapshot_dir` 参数未使用，设计 §4.6 明确要求，中途死亡时快照永久停在意向态，而快照是不可逆动作的唯一证据）；A15 高（`count` 缺失被默认成 0，整窗静默丢数而窗口级对账仍判绿，**已实机验证**，与 D9/D16/D21 同型）；A16-A20 中（PRD #6 分批未实现 / 设计 §4.1 步骤 5 全局对账缺失 / 相关性只取 `schema.max` 少两层兜底 / `--reset` 语义偏离 / classify 无事务）；A21-A24 低。**2 处偏离均裁定接受**（认证探活改 401 自愈、`--reset` 与常规候选集互斥），按速查 §11 属「实现取舍」，**设计不改**，裁定留痕见自测报告 Review 记录。等待 DevOps Review（须另开会话冷启动）
 - 阻塞项：无
 - **Owner 已裁决（2026-08-16）：建最小 `l1-gates`**——DevOps 在 Developer 开工前建 GitHub Actions（只跑单测 + lint，不触真实平台）。建成后实现/部署阶段恢复正常门禁模式（绿灯自动推进），见 `v0.1.md` 异常升级记录第 2 行
 - CN-001 已由 PM 确认并执行（2026-08-16）：PRD 验收 #1 正文已改为窗口级对账口径，与设计 §4.1 步骤 4 一致——实现会话直接以 PRD 正文为准，不再存在两处口径
-- 下一步入口：新开会话切 **Architect / DevOps 分别 Review 实现 R1**。Architect 重点：实现与设计 §2/§3/§4 契约的一致性、**1 处待裁定的偏离**（§3.1.1 认证探活改为「首次认证 + 401 自愈」，理由与覆盖见自测报告「需 Review 方裁定的偏离」）、以及「验收标准 / 边界 / 回归」的独立复核；DevOps 重点：`data/` 三件套落位、凭据纪律的结构化断言、`make test` 与 `l1-gates` 的衔接 → 两方通过后由 Owner 验收（含 3 项人工抽检）→ 迭代关闭检查
+- 下一步入口：**Developer 会话修订出 R2**——必修 A14（reconcile 补齐快照 + 补断言用例）、A15（`count` 缺失抛 `PlatformError` 而非默认 0，并建议列入设计 §8 第 6 条清单成为第 7 条）；建议一并处理 A16-A20（A16 若判定不实现分批，须走 Change Note 调整 PRD #6 措辞，不能参数存在而行为缺失）。**DevOps 的实现 R1 Review 仍待另开会话冷启动**（重点：`data/` 三件套落位、凭据纪律结构化断言、`make test` 与 `l1-gates` 衔接） → 两方通过后由 Owner 验收（含 3 项人工抽检：#6 真实小批量、#7 报告可读性、#8 真实提交）→ 迭代关闭检查
 - 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏约 80 秒/条，预判耗时随候选规模线性放大（500 条最坏 11~22 小时）。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：
