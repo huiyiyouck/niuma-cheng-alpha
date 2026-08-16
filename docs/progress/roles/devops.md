@@ -15,8 +15,8 @@
 - 关联迭代：v0.1
 - 关联非迭代工作：无
 - 关联 Change Note：无
+- 执行结果（同日补记）：已 push，**首跑绿灯**（run `31927751637`，10 秒），骨架期行为与本地实测一致——`pytest` 退出码 5 被正确识别为「无用例」。**v0.1 降级模式到此结束**，实现阶段起推进依据回到 [P0] 的 `l1-gates` 绿灯结论。首跑另暴露一条 Node 20 弃用警告：`actions/checkout@v4` / `setup-python@v5` 被强制跑在 Node 24 上；查 GitHub API 后确认两者均已发布至 v7，同日升级消除警告。教训：写 workflow 时 action 版本不能凭记忆写，要查当前版本。
 - 遗留问题/风险：
-  - **未 push 前 CI 不生效**：GitHub 上没有该 workflow，`l1-gates` 结论不可得，实现阶段推进仍属降级模式。这是当前唯一待办。
   - **`.github/workflows/l1-gates.yml` 未列入 ADR-0003 受保护路径名单**。ADR 判据是「不可重算」，CI 文件本身可重写、不符合该判据；但删除它等于**静默关闭门禁**，后果是安全性而非数据丢失。建议 Architect 评估是否为此扩一条判据（或明确不纳入的理由）——名单归 Architect，DevOps 只提。
   - 依赖声明形态（`requirements.txt` / `pyproject.toml`）未定，安装步骤三种都容错处理；Developer 定下后由 DevOps 收敛。
   - 骨架期 workflow 未经真实运行验证（本地只验了各步骤行为）。首次 push 后须确认 Actions 页面实际绿灯，若红灯由 DevOps 修。
