@@ -1,5 +1,26 @@
 # DevOps（运维/部署工程师）角色日志
 
+## 2026-08-16 — 会话摘要（第八次出场）
+- 本次角色：DevOps（运维/部署工程师）
+- 动作：Review（v0.1 实现阶段 R1，被指定为 Review 方）
+- 涉及文档：`iterations/v0.1-test-report.md`（追加 R1 Review 记录）、`iterations/v0.1.md`（实现阶段门禁行补 DevOps 结论）、`INDEX.md`
+- 结论：**需修改（O3 高，同 Architect A14）**。另 O1 放行前置（`l1-gates` 未在实现代码上跑过）、O2 中（Makefile 与 CI 两套口径）。产物落位、凭据纪律、`confirm` 侧证据链、六条路径覆盖均已到位。
+- 关键取舍（选了什么 / 备选什么 / 为什么）：
+  - **做了实证而不只读代码**：`make test`（93 passed 属实）、`make lint`、并用 `git archive HEAD` 导出干净检出精确预演 CI 环境（lint 退出 0、93 passed）——三条实现 commit 从未跑过 CI，作为门禁负责人应当预判推上去会不会红，而不是等它红了再说。
+  - **撤回过一条误报**：本以为 `submit.py` 全程无 `conn.commit()` 会让 `in_flight` 随未提交事务回滚、N8 失效，查 `db.py:93` 确认 `isolation_level=None`（autocommit）后撤回。但把它写进了 Review 记录——因为 autocommit 是个**隐式前提**，日后有人给 `connect()` 加 `isolation_level`，`submit.py` 会毫无报错地丧失崩溃安全性，值得留一行注释钉住。
+  - O1 定性为「放行前置」而非「代码缺陷」：push 归 Owner 决定，与 Developer 产出质量无关；但门禁状态属我的判断范围，必须显式标出，不能因为不是谁的错就不提。
+- 关键失误（须记住）：**O3 是我该抓到而漏掉的，由 Architect A14 抓到**。我通读了 `submit.py` 全文、逐条核对 N8/N11/N14/N15，看到 `reconcile(client, conn, *, snapshot_dir)` 的签名就默认该参数被使用了，没验证函数体——实际零次使用，`cli.py` 传了参数直接被丢弃。恢复路径不补齐证据，正是我盯了三轮的那条链上最后一环。教训：**核对「代码在不在」不等于核对「参数用没用」**；这与我自己在设计 R3 写下的「替身按理想情况返回数据会掩盖取数路径错误」是同一类认知陷阱，换成人工阅读同样成立。下次核对契约落地，对每个参数问一句「它在函数体里出现过吗」。
+- 关联迭代：v0.1
+- 关联非迭代工作：无
+- 关联 Change Note：CN-001（已由 PM 执行落入 PRD 正文）
+- 遗留问题/风险：
+  - **R2 修订后需重新取得 `l1-gates` 绿灯**——门禁结论绑定 commit、不继承。
+  - O2 的 CI 那半边由我承接：把 lint 排除规则对齐为 `docs/research|\.venv`，并改为直接调用 `make lint` / `make test`，从此单一口径。等 Developer 侧把 `PY` 改成可回退写法后一并做。
+  - `db.connect()` 的 autocommit 是 `submit.py` 崩溃安全性的隐式前提，建议补注释钉住（非必修）。
+  - `.github/workflows/l1-gates.yml` 仍未列入 ADR-0003 受保护路径名单（历次提出，待 Architect 判断）。
+- 下一步入口：Developer 出 R2（必修 A14≡O3、A15；建议一并处理 A16-A20 与 O2 的 Makefile 半边）→ push 取得 `l1-gates` 绿灯 → 两方复核 → Owner 验收（含 3 项人工抽检）→ 迭代关闭检查。部署就绪检查阶段预期为「已跳过（本迭代无部署，本地运行）」。
+- 收尾状态：未收尾
+
 ## 2026-08-16 — 会话摘要（第七次出场，首个非 Review 产出）
 - 本次角色：DevOps（运维/部署工程师）
 - 动作：产出（建最小 `l1-gates` CI，Owner 指示）
