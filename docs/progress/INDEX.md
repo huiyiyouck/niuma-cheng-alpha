@@ -10,7 +10,7 @@
 - 阻塞项：无
 - **Owner 已裁决（2026-08-16）：建最小 `l1-gates`**——DevOps 在 Developer 开工前建 GitHub Actions（只跑单测 + lint，不触真实平台）。建成后实现/部署阶段恢复正常门禁模式（绿灯自动推进），见 `v0.1.md` 异常升级记录第 2 行
 - CN-001 已由 PM 确认并执行（2026-08-16）：PRD 验收 #1 正文已改为窗口级对账口径，与设计 §4.1 步骤 4 一致——实现会话直接以 PRD 正文为准，不再存在两处口径
-- 下一步入口：**先**新开会话切 **DevOps 建最小 `l1-gates`**（`.github/workflows/l1-gates.yml`：单测 + lint，不触真实平台；技术栈按设计 ADR 选型；建成 push 后回填本行状态）→ **再**新开会话切 **Developer 启动实现阶段**。必读：`iterations/v0.1-design.md`（已定稿，§3 接口契约与 §8 交接清单是主要入口）+ `iterations/v0.1-prd.md`（验收 #1–#10）+ `ADR-0001~0004`。开工要点——① §8 第 1 条「先建骨架再填逻辑」：`db.py` schema → `client.py`（含替身注入点）→ 其余模块；② §8 第 6 条那**六条「亮绿灯但数据错」的路径**是本项目最有价值的实现期检查表，Developer 在 R4 建议自测报告按其逐条留证据；③ §8 第 3 条 `.gitignore` 追加 `data/` 须在首个产生运行产物的 commit 之前；④ 实现阶段 Review 方由 Developer 送审时指定（Architect 转 Review 方）
+- 下一步入口：~~先 DevOps 建最小 `l1-gates`~~ → **已建成**（2026-08-16，DevOps 会话）：`.github/workflows/l1-gates.yml`，Python 3.11 + `compileall` 语法检查（排除 `docs/research/` 第三方快照）+ pytest（退出码 5「无用例」视为通过，Developer 首个带测试的 commit 起自动成为实际门禁）；不配置任何平台凭据 secret；不设 `paths-ignore`（纯文档 commit 也须跑出绿灯结论，否则按 [P0]「查不到结论」等同非绿灯反而卡死流程）。**⚠️ 待 Owner push 到远端后才实际生效**——未 push 前 GitHub 上无该 workflow，`l1-gates` 结论仍不可得，实现阶段推进仍属降级模式。→ **再**新开会话切 **Developer 启动实现阶段**。必读：`iterations/v0.1-design.md`（已定稿，§3 接口契约与 §8 交接清单是主要入口）+ `iterations/v0.1-prd.md`（验收 #1–#10）+ `ADR-0001~0004`。开工要点——① §8 第 1 条「先建骨架再填逻辑」：`db.py` schema → `client.py`（含替身注入点）→ 其余模块；② §8 第 6 条那**六条「亮绿灯但数据错」的路径**是本项目最有价值的实现期检查表，Developer 在 R4 建议自测报告按其逐条留证据；③ §8 第 3 条 `.gitignore` 追加 `data/` 须在首个产生运行产物的 commit 之前；④ 实现阶段 Review 方由 Developer 送审时指定（Architect 转 Review 方）
 - 提请 Owner 知悉（非门禁）：设计 §7.1 风险 R-1——相关性接口最坏约 80 秒/条，预判耗时随候选规模线性放大（500 条最坏 11~22 小时）。建议先跑 `classify` + `report` 看候选规模再定预判范围；若需收窄 v0.1 范围，走 Change Note
 
 > 当迭代激活后，`当前阶段` 必须写清楚具体状态，例如：

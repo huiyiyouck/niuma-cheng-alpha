@@ -1,0 +1,65 @@
+# 约定名门禁（`docs/baseline/runtime.md` [P0]）
+#
+# 阶段推进的唯一依据 = 本 workflow 在当前 commit 的绿灯结论。
+# 建立于 2026-08-15：Owner 变更 M1 原裁决（原为「接受 v0.1 全程降级模式、不建 CI」），
+# 改建本最小门禁，v0.1 的降级模式自本 workflow 生效起结束。留痕见 `docs/progress/iterations/v0.1.md`
+# 异常升级记录第 3 行。
+#
+# 边界：只跑单元测试 + 语法检查，**不接触真实 BRAIN 平台**。
+# 本 workflow 不配置任何平台凭据 secret——需要真实平台的验收项（PRD #6 的真实小批量执行、
+# #8 的真实提交）按 PRD 既定口径由 Owner 在验收时人工抽验，不在 CI 内执行。
+
+name: l1-gates
+
+# 不设 paths-ignore：纯文档 commit 同样要跑出绿灯结论。
+# 按 [P0]，「查不到本 workflow 的结论」与红灯同等对待、一律不推进；若用 paths-ignore
+# 跳过文档 commit，这类 commit 将永远拿不到绿灯，反而把流程卡死。
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  l1-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'      # 设计 §1.2 选型：Python 3.11+
+
+      - name: 安装依赖
+        # 设计 §1.2：运行时依赖只有 requests，测试期另加 pytest。
+        # 依赖声明形态（requirements.txt / pyproject.toml）尚未确定，两种都容错处理；
+        # Developer 定下形态后由 DevOps 相应收敛本步骤。
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: 语法检查
+        # lint 占位：项目尚未选定 linter（设计 §1.2 只声明 requests + pytest）。
+        # 此处用标准库做语法检查，不擅自引入未经架构决策的依赖；
+        # 选定 linter（如 ruff）后由 DevOps 替换本步骤。
+        # 排除 docs/research/：第三方 Demo 快照，只读参考、非本项目代码，
+        # 其语法问题不应判本项目红灯。
+        run: python -m compileall -q -x 'docs/research' .
+
+      - name: 单元测试
+        # 骨架期仓库尚无测试用例，pytest 退出码 5（no tests collected）视为通过；
+        # Developer 第一个带测试的 commit 起，本步骤即成为实际门禁。
+        # 其余非零退出码一律判红。
+        run: |
+          set +e
+          pytest -q
+          code=$?
+          set -e
+          if [ "$code" -eq 5 ]; then
+            echo "尚无测试用例（骨架期），本步骤跳过；有测试后自动生效。"
+            exit 0
+          fi
+          exit "$code"
