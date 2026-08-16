@@ -26,8 +26,10 @@ def _status_counts(conn) -> dict[str, int]:
         "SELECT funnel_status, COUNT(*) AS n FROM alpha_state GROUP BY funnel_status"
     ).fetchall()
     counts = {row["funnel_status"]: row["n"] for row in rows}
-    # 「未回测」不设：v0.1 库存全部来自平台已回测产物（v0.3 组装端接入时再新增）
-    return {status: counts.get(status, 0) for status in db.FUNNEL_STATUSES if status in counts}
+    # 七态全列，计数为 0 也保留（A21）：Owner 要能分辨「提交失败 0 条」与
+    # 「这个状态压根没出现过」——漏斗视图的价值就在于分级完整。
+    # 「未回测」不在 FUNNEL_STATUSES 内，天然被排除（v0.3 组装端接入时再新增）。
+    return {status: counts.get(status, 0) for status in db.FUNNEL_STATUSES}
 
 
 def _rework_by_source(conn) -> dict[str, int]:

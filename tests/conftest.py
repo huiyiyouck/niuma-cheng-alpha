@@ -15,8 +15,9 @@ class FakePlatform:
     """
 
     def __init__(self, alphas=None, *, offset_ceiling=None, correlations=None, submit_results=None,
-                 details=None):
+                 details=None, total_override=None):
         self.alphas = list(alphas or [])
+        self.total_override = total_override   # 不带时间窗查询时平台报告的总数（A17 用）
         self.offset_ceiling = offset_ceiling
         self.correlations = correlations or {}
         self.submit_results = submit_results or {}
@@ -35,7 +36,9 @@ class FakePlatform:
         window = items[offset : offset + limit]
         if self.offset_ceiling is not None:
             window = [a for i, a in enumerate(window, start=offset) if i < self.offset_ceiling]
-        return AlphaListPage(count=len(items), items=window)
+        no_window = date_created_gt is None and date_created_lt is None
+        count = self.total_override if (no_window and self.total_override is not None) else len(items)
+        return AlphaListPage(count=count, items=window)
 
     def get_alpha(self, alpha_id):
         self.calls.append(("get_alpha", alpha_id))

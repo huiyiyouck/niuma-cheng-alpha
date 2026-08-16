@@ -90,6 +90,12 @@ def connect(path: str | Path) -> sqlite3.Connection:
     """打开（必要时创建）库文件，建表并校验 schema 版本。"""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    # isolation_level=None 即 autocommit：每条 execute 立即落盘。
+    # ★ 这是 submit.py 崩溃安全性的隐式前提——`in_flight` 意向标记必须在
+    # POST 之前真正落到磁盘，否则进程被杀时它会随未提交事务一起消失，N8 的
+    # 整条恢复路径就失效了。若日后要给本连接加 isolation_level，必须同时给
+    # submit.py 的意向标记补显式提交。需要批量原子性的地方各自显式 BEGIN
+    # （见 sync.py::_transaction、classify.py::run）。
     conn = sqlite3.connect(path, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")

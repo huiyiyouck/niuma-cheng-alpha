@@ -169,7 +169,9 @@ def reconcile(client, conn: sqlite3.Connection, *, snapshot_dir: Path | str) -> 
     """
     report = ReconcileReport()
     rows = conn.execute(
-        "SELECT alpha_id FROM alpha_state WHERE submit_result = ? ORDER BY alpha_id", (IN_FLIGHT,)
+        "SELECT alpha_id, confirm_fingerprint FROM alpha_state WHERE submit_result = ?"
+        " ORDER BY alpha_id",
+        (IN_FLIGHT,),
     ).fetchall()
 
     for row in rows:
@@ -191,17 +193,46 @@ def reconcile(client, conn: sqlite3.Connection, *, snapshot_dir: Path | str) -> 
                 (db.SUBMITTED, detail.get("dateSubmitted"), alpha_id),
             )
             report.resolved_submitted += 1
+            outcome = {"result": "success", "error": None}
             report.details.append({"alpha_id": alpha_id, "action": "收敛为已提交"})
         else:
             conn.execute(
-                "UPDATE alpha_state SET funnel_status=?, status_source='prediction',"
+                # A23：该状态由 reconcile 造成，不是预判的结论
+                "UPDATE alpha_state SET funnel_status=?, status_source='submit',"
                 " submit_result=NULL, submitted_at=NULL WHERE alpha_id=?",
                 (db.PENDING_CONFIRM, alpha_id),
             )
             report.resolved_reverted += 1
+            outcome = {"result": "reverted", "error": "提交未达成，已退回待确认"}
             report.details.append({"alpha_id": alpha_id, "action": "退回待确认（提交未达成）"})
 
+        # A14：状态恢复了，证据也要跟着恢复——**每条收敛后立即补齐**（O3 ①），
+        # 因为 reconcile 自身也可能中途死亡。
+        _patch_snapshot_for(snapshot_dir, row["confirm_fingerprint"], alpha_id, outcome)
+
     return report
+
+
+def _patch_snapshot_for(snapshot_dir: Path | str, fingerprint: str | None,
+                        alpha_id: str, outcome: dict) -> None:
+    """按确认指纹定位该条所属的快照，补齐它的结果字段。
+
+    快照文件名形如 `{时间戳}-{指纹前8位}.json`；同一指纹若有多份（同一清单被确认
+    过多次），取时间戳最大的那份——即这条 `in_flight` 实际所属的那次提交。
+    """
+    if not fingerprint:
+        return
+    candidates = sorted(Path(snapshot_dir).glob(f"*-{fingerprint[:8]}.json"))
+    if not candidates:
+        return
+
+    path = candidates[-1]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    for item in payload["items"]:
+        if item["alpha_id"] == alpha_id:
+            item.update(outcome)
+    payload["reconciled_at"] = _now()
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _refresh_alpha(conn, alpha_id: str, detail: dict) -> None:

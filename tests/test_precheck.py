@@ -152,3 +152,16 @@ def test_每条结论立即落库_中断不丢已完成部分(conn):
 
     assert state_of(conn, "A1")["prediction_result"] == "fail"    # 已落库
     assert state_of(conn, "A2")["prediction_result"] is None
+
+
+def test_按_batch_size_分批并输出进度(conn):
+    """A16：PRD #6 要求「分批、单批规模可配」；批间是节流点，也是 Owner 的进度抓手。"""
+    for i in range(5):
+        insert_alpha(conn, f"A{i}", funnel_status=db.SUBMITTABLE)
+    platform = FakePlatform(correlations={(f"A{i}", "self"): 0.9 for i in range(5)})
+    seen = []
+
+    precheck.run(platform, conn, config=CFG, batch_size=2, progress=seen.append)
+
+    assert len(seen) == 3                       # 5 条按每批 2 条 → 3 批
+    assert "5/5" in seen[-1]

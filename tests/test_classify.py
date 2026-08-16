@@ -1,6 +1,8 @@
 """分流测试：PRD #4 / #5，设计 §3.2 规则与 §4.3 适用域·写回逻辑。"""
 import json
 
+import pytest
+
 from alpha_platform import classify, db
 
 from .conftest import insert_alpha, make_check, state_of
@@ -156,3 +158,27 @@ def test_scope_unclassified_只处理未分流记录(conn):
 
     assert state_of(conn, "A1")["funnel_status"] == db.SUBMITTABLE
     assert state_of(conn, "A2")["funnel_status"] == db.DISCARD  # 未被重算
+
+
+def test_重算中途失败不留下混合态(conn):
+    """A20：中途失败若留下「部分新阈值、部分旧阈值」，report 会给出误导性的混合结果。"""
+    insert_alpha(conn, "A1", checks=[make_check("LOW_SHARPE", "PASS", 2.0, 1.58)], funnel_status=db.BACKTESTED)
+    insert_alpha(conn, "A2", checks=[make_check("LOW_SHARPE", "PASS", 2.0, 1.58)], funnel_status=db.BACKTESTED)
+    classify.run(conn, threshold=0.3)
+
+    original = classify.classify_checks
+
+    def exploding(checks, threshold):
+        if threshold == 0.9:
+            raise RuntimeError("算到一半崩了")
+        return original(checks, threshold)
+
+    classify.classify_checks = exploding
+    try:
+        with pytest.raises(RuntimeError):
+            classify.run(conn, threshold=0.9)
+    finally:
+        classify.classify_checks = original
+
+    thresholds = {r[0] for r in conn.execute("SELECT classify_threshold FROM alpha_state")}
+    assert thresholds == {0.3}          # 全部停在旧阈值，没有混合态

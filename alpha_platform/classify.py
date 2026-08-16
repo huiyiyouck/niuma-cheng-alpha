@@ -88,7 +88,22 @@ def run(conn: sqlite3.Connection, *, threshold: float = 0.3, scope: str = "all")
     now = datetime.now(timezone.utc).isoformat()
     counts: dict[str, int] = {}
 
-    for row in conn.execute(sql, params).fetchall():
+    # A20：整体包一个事务——中途失败若留下「部分新阈值、部分旧阈值」的混合态，
+    # report 会给出误导性的混合结果。（precheck 的逐条 autocommit 是有意为之，
+    # 那里要的是断点续跑，不要一并改。）
+    conn.execute("BEGIN")
+    try:
+        counts = _classify_rows(conn, conn.execute(sql, params).fetchall(), threshold, now)
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    conn.execute("COMMIT")
+    return counts
+
+
+def _classify_rows(conn, rows, threshold: float, now: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
         checks = (json.loads(row["raw_json"]).get("is") or {}).get("checks") or []
         result = classify_checks(checks, threshold)
 

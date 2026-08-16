@@ -90,6 +90,12 @@ def main(argv: list[str] | None = None, *, client_factory=None) -> int:
     except RateLimitError as exc:
         print(f"{exc}；断点已保存，稍后重跑同一命令即可", file=sys.stderr)
         return RESUMABLE_INTERRUPT
+    except Exception as exc:
+        # A24：兜底。未捕获异常虽然退出码也是 1，但会向 stderr 打完整 traceback；
+        # 详情走日志（data/logs/），终端只给一句人能读的。
+        logging.getLogger("alpha_platform").exception("命令执行失败")
+        print(f"执行失败：{exc}", file=sys.stderr)
+        return GENERAL_FAILURE
     finally:
         conn.close()
 
@@ -100,7 +106,8 @@ def _dispatch(args, cfg, conn, client_factory) -> int:
         stages = STAGES if args.stage == "all" else (args.stage,)
         for stage in stages:
             if args.full:
-                result = sync.full_sync(client, conn, stage=stage, config=cfg, resume=args.resume)
+                result = sync.full_sync(client, conn, stage=stage, config=cfg, resume=args.resume,
+                                        progress=print)
                 _print_sync(stage, result)
             else:
                 result = sync.incremental_sync(client, conn, stage=stage, config=cfg)
@@ -118,7 +125,7 @@ def _dispatch(args, cfg, conn, client_factory) -> int:
         client = _make_client(cfg, client_factory)
         counts = precheck.run(
             client, conn, config=cfg, batch_size=cfg.batch_size, limit=args.limit,
-            reset=args.reset, retry_pending=args.retry_pending,
+            reset=args.reset, retry_pending=args.retry_pending, progress=print,
         )
         print(f"预判完成：{counts}")
         return OK
@@ -178,6 +185,10 @@ def _print_sync(stage: str, result) -> None:
     print(f"[{stage}] 窗口级对账：{'通过' if result.reconciled else '不一致'}")
     for slice_info in result.mismatched_slices:
         print(f"    窗口 {slice_info['slice']}：报告 {slice_info['reported']} / 实拉 {slice_info['fetched']}")
+    if result.global_mismatch:
+        print(f"[{stage}] 全局对账不一致（本地 {result.local_count} vs 平台报告 "
+              f"{result.total_reported}）——已留痕 meta.global_reconcile_mismatch；"
+              f"该项为诊断信号，不作为通过条件")
     if result.offset_ceiling_detected:
         print(f"[{stage}] 已检出 offset 封顶，留痕见 meta.offset_ceiling_detected")
 

@@ -26,19 +26,30 @@ class ResetGuardError(RuntimeError):
 
 def run(client, conn: sqlite3.Connection, *, config: Config, batch_size: int | None = None,
         limit: int | None = None, reset: list[str] | None = None,
-        retry_pending: bool = False) -> dict[str, int]:
-    """对候选集逐条执行两阶段预判，每条结论立即落库并提交事务。"""
+        retry_pending: bool = False, progress=None) -> dict[str, int]:
+    """对候选集分批执行两阶段预判，每条结论立即落库并提交事务。
+
+    分批（PRD #6「执行须分批、单批规模可配」）：批间是天然的节流点，也是 Owner
+    在这个最坏以小时计的长任务上唯一的进度抓手（设计 §5）。每条结论仍逐条落库，
+    断点粒度是「条」而不是「批」——中断后重跑不会退回整批重来。
+    """
     if reset:
         _guard_reset(conn, reset)
 
     rows = _candidates(conn, reset=reset, retry_pending=retry_pending, limit=limit)
     threshold = {"value": config.correlation_threshold, "source": config.correlation_threshold_source}
+    size = batch_size or config.batch_size
     counts: dict[str, int] = {}
+    done = 0
 
-    for row in rows:
-        verdict, reason = _predict(client, row["alpha_id"], config.correlation_threshold, threshold)
-        _write_back(conn, row["alpha_id"], verdict, reason)
-        counts[verdict] = counts.get(verdict, 0) + 1
+    for start in range(0, len(rows), size):
+        for row in rows[start : start + size]:
+            verdict, reason = _predict(client, row["alpha_id"], config.correlation_threshold, threshold)
+            _write_back(conn, row["alpha_id"], verdict, reason)
+            counts[verdict] = counts.get(verdict, 0) + 1
+            done += 1
+        if progress:
+            progress(f"预判进度 {done}/{len(rows)}（本批 {min(size, len(rows) - start)} 条）")
 
     return counts
 

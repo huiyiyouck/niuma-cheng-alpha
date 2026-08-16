@@ -115,7 +115,12 @@ class BrainClient:
             params=params,
             max_attempts=self._retry.list_max_attempts,
         )
-        return AlphaListPage(count=body.get("count", 0), items=body.get("results", []))
+        if "count" not in body:
+            # A15：「取不到总数」与「总数为 0」必须区分。默认成 0 会让 sync 的
+            # `while offset < reported` 直接不进循环，整窗数据静默丢失，而
+            # fetched == reported == 0 让窗口级对账仍判绿——不确定就报错，不猜。
+            raise PlatformError("列表响应缺少 count 字段，无法判定该窗口总数")
+        return AlphaListPage(count=body["count"], items=body.get("results", []))
 
     def get_alpha(self, alpha_id: str) -> dict:
         """按 ID 直查单条详情（R4/D21）。
@@ -134,12 +139,25 @@ class BrainClient:
         return self._correlation(f"/alphas/{alpha_id}/correlations/prod")
 
     def submit_alpha(self, alpha_id: str) -> SubmitOutcome:
-        """唯一不可逆动作。失败不抛异常，把原因原文交回上层记录。"""
+        """唯一不可逆动作。失败不抛异常，把原因原文交回上层记录。
+
+        例外是限流：429 表示平台**未受理**该请求（无副作用），把它写成
+        「提交失败」终态会让该记录从此不在提交清单里——一个暂时状态被固化。
+        故 429 退避重试，耗尽则抛 `RateLimitError` 交由上层中止批次、保留断点（A22）。
+        """
         self._ensure_authenticated()
-        response = self._send("POST", f"/alphas/{alpha_id}/submit")
-        if response.status_code == 401:
-            self._authenticate()
+        for attempt in range(1, self._retry.list_max_attempts + 1):
             response = self._send("POST", f"/alphas/{alpha_id}/submit")
+            if response.status_code == 401:
+                self._authenticate()
+                response = self._send("POST", f"/alphas/{alpha_id}/submit")
+            if response.status_code != 429:
+                break
+            if attempt == self._retry.list_max_attempts:
+                raise RateLimitError(
+                    f"提交 {alpha_id} 触发限流，重试 {attempt} 次仍未受理；该条保持可重试状态"
+                )
+            time.sleep(self._retry.rate_limit_backoff_sec)
 
         logger.info("submit_alpha alpha_id=%s status=%s", alpha_id, response.status_code)
         if 200 <= response.status_code < 300:
@@ -226,11 +244,18 @@ class BrainClient:
 
 
 def _extract_max_correlation(body: dict | None) -> float | None:
-    """相关性响应的最大值在 `schema.max`；取不到即视为平台尚未算完。"""
+    """相关性响应的最大值：`schema.max` 优先，顶层 `max` 兜底（A18）。
+
+    Demo 的 `check_correlation` 写了多层兜底，说明平台响应格式存在变体。只认一层
+    的后果不是报错，而是把「格式不同」误判为「平台还没算完」→ 重试耗尽 → 假待定：
+    白等 80 秒、占一个 `--retry-pending` 名额、Owner 以为是平台慢。
+    """
     if not body:
         return None
-    value = (body.get("schema") or {}).get("max")
-    return float(value) if isinstance(value, (int, float)) else None
+    for value in ((body.get("schema") or {}).get("max"), body.get("max")):
+        if isinstance(value, (int, float)):
+            return float(value)
+    return None
 
 
 def _json_or_none(response) -> dict | None:

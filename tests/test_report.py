@@ -86,3 +86,14 @@ def test_文本与_json_两种输出格式(conn):
 
     assert db.SUBMITTABLE in text
     assert payload["status_counts"][db.SUBMITTABLE] == 1
+
+
+def test_七态全列即使计数为零(conn):
+    """A21：Owner 要能分辨「提交失败 0 条」与「这个状态压根没出现过」。"""
+    _classified(conn, "A1", db.SUBMITTABLE)
+
+    counts = report.build(conn)["status_counts"]
+
+    assert list(counts.keys()) == list(db.FUNNEL_STATUSES)
+    assert counts[db.SUBMIT_FAILED] == 0
+    assert "未回测" not in counts

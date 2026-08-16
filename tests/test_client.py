@@ -39,7 +39,8 @@ class FakeSession:
         for (m, suffix), responses in self.routes.items():
             if m == method and url.endswith(suffix):
                 return responses.pop(0) if len(responses) > 1 else responses[0]
-        return FakeResponse(200, {})
+        # 默认响应带 count：真实平台的列表接口总会返回它（A15 之后缺失即报错）
+        return FakeResponse(200, {"count": 0, "results": []})
 
 
 NO_WAIT = RetryPolicy(
@@ -250,3 +251,54 @@ def test_submit_返回值不含_response_对象或_cookie():
     rendered = repr(client.submit_alpha("A1"))
     assert "FakeResponse" not in rendered
     assert "cookie" not in rendered.lower()
+
+
+# --- A15：不确定就报错，不要猜一个安全值继续 -------------------------------
+
+
+def test_count_字段缺失时抛错而不默认为_0():
+    """A15：「取不到总数」与「总数为 0」必须区分。
+
+    默认成 0 会让 sync 的 `while offset < reported` 不进循环 → 整窗静默丢数，
+    而 fetched == reported == 0 让窗口级对账仍判绿——与 D9/D16/D21 同型的静默路径。
+    """
+    routes = {("GET", "/users/self/alphas"): [FakeResponse(200, {"results": [{"id": "A1"}]})]}
+    client, _ = make_client(routes)
+    with pytest.raises(PlatformError):
+        client.list_alphas(stage="IS", limit=10, offset=0)
+
+
+def test_count_为_0_是合法值不报错():
+    routes = {("GET", "/users/self/alphas"): [FakeResponse(200, {"count": 0, "results": []})]}
+    client, _ = make_client(routes)
+    assert client.list_alphas(stage="IS", limit=10, offset=0).count == 0
+
+
+# --- A18：相关性响应格式变体 ------------------------------------------------
+
+
+def test_相关性支持顶层_max_兜底():
+    """A18：Demo 的 check_correlation 写了多层兜底，说明平台响应格式存在变体。
+
+    只认一层的后果不是报错，而是把「格式不同」误判为「平台还没算完」→ 假待定。
+    """
+    routes = {("GET", "/alphas/A1/correlations/self"): [FakeResponse(200, {"max": 0.61})]}
+    client, _ = make_client(routes)
+    assert client.get_self_correlation("A1").max_correlation == 0.61
+
+
+# --- A22：429 不应把可恢复状态固化成终态 ------------------------------------
+
+
+def test_submit_遇_429_退避重试后成功():
+    routes = {("POST", "/alphas/A1/submit"): [FakeResponse(429), FakeResponse(201, {"id": "A1"})]}
+    client, _ = make_client(routes)
+    assert client.submit_alpha("A1").ok is True
+
+
+def test_submit_限流重试耗尽抛_RateLimitError_而非记为提交失败():
+    """把「暂时限流」写成「提交失败」终态，会让该记录从此不在提交清单里。"""
+    routes = {("POST", "/alphas/A1/submit"): [FakeResponse(429), FakeResponse(429), FakeResponse(429)]}
+    client, _ = make_client(routes)
+    with pytest.raises(RateLimitError):
+        client.submit_alpha("A1")

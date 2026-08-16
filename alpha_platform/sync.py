@@ -31,13 +31,14 @@ class SyncReport:
     reconciled: bool = True              # 窗口级对账结论（主口径）
     mismatched_slices: list = field(default_factory=list)
     offset_ceiling_detected: bool = False
+    global_mismatch: bool = False        # 步骤 5：本地行数 vs 第三方左值（只留痕，不判红）
 
 
 # --- 全量 -----------------------------------------------------------------
 
 
 def full_sync(client, conn: sqlite3.Connection, *, stage: str, config: Config,
-              resume: bool = True) -> SyncReport:
+              resume: bool = True, progress=None) -> SyncReport:
     report = SyncReport(stage=stage)
 
     # 步骤 0：全局总量交叉验证——不带任何时间窗，独立于切片路径（D9）
@@ -48,12 +49,22 @@ def full_sync(client, conn: sqlite3.Connection, *, stage: str, config: Config,
         return report
 
     root_from, root_to = bounds
-    _split(client, conn, stage, config, root_from, root_to, 0, report, resume)
+    _split(client, conn, stage, config, root_from, root_to, 0, report, resume, progress)
 
     report.local_count = _local_count(conn, stage)
     report.reconciled = not report.mismatched_slices
     db.set_meta(conn, "last_full_sync_at", _now())
     _update_watermark(conn, stage)
+
+    # 步骤 5：全局对账（A17）。左值来自步骤 0 的第三方查询，独立于切片路径——
+    # 外扩 1 秒修的是那一个 bug，这条左值修的是「这类 bug 以后还能被发现」。
+    # 不判红：total 自身可能被平台计数上限截断，它是诊断信号而非通过条件。
+    if report.total_reported != report.local_count:
+        report.global_mismatch = True
+        db.set_meta(conn, "global_reconcile_mismatch", json.dumps(
+            {"stage": stage, "total_reported": report.total_reported,
+             "local_count": report.local_count, "at": _now()},
+        ))
 
     # 步骤 7：offset 直连穷尽作为诊断项——断言留痕存在，不断言两数相等
     offset_count = _offset_exhaust_count(client, stage, config)
@@ -82,7 +93,7 @@ def _root_bounds(client, stage) -> tuple[datetime, datetime] | None:
     return t_min - ONE_SECOND, t_max + ONE_SECOND
 
 
-def _split(client, conn, stage, config, frm, to, depth, report, resume) -> None:
+def _split(client, conn, stage, config, frm, to, depth, report, resume, progress=None) -> None:
     page = client.list_alphas(
         stage=stage, limit=1, offset=0,
         date_created_gt=_fmt(frm), date_created_lt=_fmt(to),
@@ -92,15 +103,17 @@ def _split(client, conn, stage, config, frm, to, depth, report, resume) -> None:
     if page.count >= config.split_threshold and splittable:
         # mid 向下取整到秒（D11）
         mid = frm + timedelta(seconds=int((to - frm).total_seconds() // 2))
-        _split(client, conn, stage, config, frm, mid, depth + 1, report, resume)
-        _split(client, conn, stage, config, mid - ONE_SECOND, to, depth + 1, report, resume)
+        _split(client, conn, stage, config, frm, mid, depth + 1, report, resume, progress)
+        _split(client, conn, stage, config, mid - ONE_SECOND, to, depth + 1, report, resume, progress)
         return
 
     unsplittable = page.count >= config.split_threshold      # 超阈值却已无法细分
-    _fetch_leaf(client, conn, stage, config, frm, to, page.count, unsplittable, report, resume)
+    _fetch_leaf(client, conn, stage, config, frm, to, page.count, unsplittable, report, resume,
+                progress)
 
 
-def _fetch_leaf(client, conn, stage, config, frm, to, reported, unsplittable, report, resume) -> None:
+def _fetch_leaf(client, conn, stage, config, frm, to, reported, unsplittable, report, resume,
+                progress=None) -> None:
     slice_key = (stage, _fmt(frm), _fmt(to))
     if resume and _slice_done(conn, slice_key):
         return
@@ -130,6 +143,9 @@ def _fetch_leaf(client, conn, stage, config, frm, to, reported, unsplittable, re
         (*slice_key, reported, len(seen), status, _now()),
     )
     report.fetched += len(seen)
+    if progress:                       # 设计 §5：长任务必须能看出进度，否则会被误判卡死
+        progress(f"[{stage}] 窗口 {_fmt(frm)} ~ {_fmt(to)}：拉取 {len(seen)}/{reported}，"
+                 f"累计 {report.fetched} 条")
     if len(seen) != reported:          # 窗口级对账（主口径）
         report.mismatched_slices.append({"slice": slice_key, "reported": reported, "fetched": len(seen)})
 

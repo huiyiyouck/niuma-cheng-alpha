@@ -143,3 +143,40 @@ def test_再次同步刷新平台字段但派生字段保持不变(conn):
     assert row["funnel_status"] == "待确认"
     assert row["prediction_result"] == "pass"
     assert row["classify_reason_json"] == '{"verdict":"可提交候选"}'
+
+
+def test_全局对账不一致时留痕(conn):
+    """A17：步骤 0 取回的第三方左值必须真的被比对——D9 修法的一半价值就在这条。
+
+    外扩 1 秒修的是那一个 bug，独立于切片路径的左值修的是「这类 bug 以后还能被发现」。
+    """
+    platform = FakePlatform(
+        [platform_alpha(f"A{i}", at(24, 9, 0, i)) for i in range(5)], total_override=9
+    )
+
+    report = sync.full_sync(platform, conn, stage="IS", config=Config())
+
+    assert report.local_count == 5
+    assert report.total_reported == 9
+    assert report.global_mismatch is True
+    assert '"local_count": 5' in db.get_meta(conn, "global_reconcile_mismatch")
+
+
+def test_全局对账一致时不留痕(conn):
+    platform = FakePlatform([platform_alpha(f"A{i}", at(24, 9, 0, i)) for i in range(5)])
+
+    report = sync.full_sync(platform, conn, stage="IS", config=Config())
+
+    assert report.global_mismatch is False
+    assert db.get_meta(conn, "global_reconcile_mismatch") is None
+
+
+def test_全量同步输出进度(conn):
+    """设计 §5：长任务必须输出进度行——相关性接口慢到分钟级，无进度会被误判卡死。"""
+    platform = FakePlatform([platform_alpha(f"A{i}", at(24, 9, 0, i)) for i in range(6)])
+    seen = []
+
+    sync.full_sync(platform, conn, stage="IS", config=Config(split_threshold=2, page_size=10),
+                   progress=seen.append)
+
+    assert seen and all("窗口" in line for line in seen)

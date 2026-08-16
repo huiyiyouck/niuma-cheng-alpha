@@ -188,3 +188,105 @@ def test_reconcile_查询失败时保持不动(conn, tmp_path):
 
     assert state_of(conn, "A1")["submit_result"] == "in_flight"
     assert report.unresolved == 1
+
+
+# --- A14 / O3：恢复路径必须同时恢复状态与证据 ------------------------------
+
+
+def _crash_midway(conn, tmp_path):
+    """真实复现「POST 成功、写库前进程死亡」：留下 in_flight + 意向态快照。"""
+    _candidate(conn, "A1")
+    snapshots = _snapshots(tmp_path)
+
+    class Dying(FakePlatform):
+        def submit_alpha(self, alpha_id):
+            raise RuntimeError("进程被杀")
+
+    with pytest.raises(RuntimeError):
+        submit.confirm(Dying(), conn, fingerprint=submit.dry_run(conn).fingerprint,
+                       snapshot_dir=snapshots)
+    return snapshots
+
+
+def test_reconcile_补齐快照的逐条结果(conn, tmp_path):
+    """A14：快照是不可逆动作的唯一证据，而 reconcile 正是为「中途死亡」设计的恢复路径。
+
+    恢复完状态却不恢复证据，等于在最需要证据的场景里只做了一半。
+    """
+    snapshots = _crash_midway(conn, tmp_path)
+    snapshot_file = list(snapshots.glob("*.json"))[0]
+    assert json.loads(snapshot_file.read_text(encoding="utf-8"))["items"][0]["result"] is None
+
+    platform = FakePlatform(details={"A1": {"id": "A1", "stage": "OS",
+                                            "dateSubmitted": "2026-08-16T10:00:00-04:00",
+                                            "dateCreated": "2026-01-24T09:00:00-04:00",
+                                            "regular": {"code": "rank(close)"}}})
+    submit.reconcile(platform, conn, snapshot_dir=snapshots)
+
+    payload = json.loads(snapshot_file.read_text(encoding="utf-8"))
+    assert payload["items"][0]["result"] == "success"
+    assert payload["reconciled_at"]
+
+
+def test_reconcile_后库中状态与快照结果一致(conn, tmp_path):
+    """O3 要求的交叉断言：直接测两个载体的互印性，而不只测其中一个被写过。"""
+    snapshots = _crash_midway(conn, tmp_path)
+    platform = FakePlatform(details={"A1": {"id": "A1", "stage": "IS",
+                                            "dateCreated": "2026-01-24T09:00:00-04:00",
+                                            "regular": {"code": "rank(close)"}}})
+
+    submit.reconcile(platform, conn, snapshot_dir=snapshots)
+
+    row = state_of(conn, "A1")
+    payload = json.loads(list(snapshots.glob("*.json"))[0].read_text(encoding="utf-8"))
+    item = payload["items"][0]
+    assert row["funnel_status"] == db.PENDING_CONFIRM
+    assert item["result"] == "reverted"        # 库说退回待确认，快照也说退回
+    assert row["submit_result"] is None
+
+
+def test_reconcile_逐条补齐而非全部结束后统一补(conn, tmp_path):
+    """O3 要求①：reconcile 自身也可能中途死亡，补齐时机必须在每条收敛之后。"""
+    _candidate(conn, "A1")
+    _candidate(conn, "A2")
+    snapshots = _snapshots(tmp_path)
+
+    class Dying(FakePlatform):
+        def submit_alpha(self, alpha_id):
+            if alpha_id == "A2":
+                raise RuntimeError("进程被杀")
+            return super().submit_alpha(alpha_id)
+
+    # A1 成功、A2 崩溃前已落 in_flight；手工把 A1 也拨回 in_flight 模拟两条待收敛
+    with pytest.raises(RuntimeError):
+        submit.confirm(Dying(), conn, fingerprint=submit.dry_run(conn).fingerprint, snapshot_dir=snapshots)
+    conn.execute("UPDATE alpha_state SET submit_result='in_flight', funnel_status='待确认'")
+
+    detail = {"stage": "OS", "dateSubmitted": "2026-08-16T10:00:00-04:00",
+              "dateCreated": "2026-01-24T09:00:00-04:00", "regular": {"code": "rank(close)"}}
+    seen = {}
+
+    class WatchingSecond(FakePlatform):
+        def get_alpha(self, alpha_id):
+            if alpha_id == "A2":   # 处理第二条时，第一条的快照应已补齐
+                payload = json.loads(list(snapshots.glob("*.json"))[0].read_text(encoding="utf-8"))
+                seen["a1_result"] = payload["items"][0]["result"]
+            return {"id": alpha_id, **detail}
+
+    submit.reconcile(WatchingSecond(), conn, snapshot_dir=snapshots)
+
+    assert seen["a1_result"] == "success"
+
+
+def test_reconcile_查询失败时快照也不被改写(conn, tmp_path):
+    """N15 的证据侧对应：状态不动，证据也不能被改成看起来已处理。"""
+    snapshots = _crash_midway(conn, tmp_path)
+
+    class Failing(FakePlatform):
+        def get_alpha(self, alpha_id):
+            raise RuntimeError("502")
+
+    submit.reconcile(Failing(), conn, snapshot_dir=snapshots)
+
+    payload = json.loads(list(snapshots.glob("*.json"))[0].read_text(encoding="utf-8"))
+    assert payload["items"][0]["result"] is None

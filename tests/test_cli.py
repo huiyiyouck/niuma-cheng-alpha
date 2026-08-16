@@ -113,3 +113,17 @@ def test_日志与库文件不出现凭据字段名或认证串特征(workspace)
         assert b"credentials" not in blob
         assert b"authorization" not in blob
         assert b"basic " not in blob
+
+
+def test_未预期异常被兜底为退出码_1_且不打_traceback(workspace, capsys):
+    """A24：靠未捕获异常退出虽然码也是 1，但会向 stderr 打完整 traceback。"""
+
+    class Exploding(FakePlatform):
+        def list_alphas(self, **kwargs):
+            raise RuntimeError("平台炸了")
+
+    assert run(["sync", "--full", "--stage", "IS"], Exploding()) == cli.GENERAL_FAILURE
+
+    err = capsys.readouterr().err
+    assert "平台炸了" in err
+    assert "Traceback" not in err
